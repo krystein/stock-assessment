@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { IStock } from "../interfaces";
-import { getStocks } from "../apiServices/stocks";
-
-const generateChange = () => (Math.random() * 4 - 2).toFixed(2);
+import { getStocks, getMarketChart } from "../apiServices/stocks";
 
 const StockTicker: React.FC = () => {
     const [stocks, setStocks] = useState<IStock[]>([]);
@@ -10,57 +8,69 @@ const StockTicker: React.FC = () => {
     useEffect(() => {
         const fetch = async () => {
             try {
-                const response = await getStocks();
-                const updated = response.map((stock) => ({
-                    ...stock,
-                    change: parseFloat(generateChange()),
-                }));
+                const response: IStock[] = await getStocks();
+                const updated = await Promise.all(
+                    response.map(async (stock) => {
+                        try {
+                            const chart = await getMarketChart(stock.id);
+                            const prices = chart.prices;
+                            const len = prices.length;
+
+                            if (len >= 2) {
+                                const latest = prices[len - 1][1];
+                                const prev = prices[len - 2][1];
+                                const change24h = latest - prev;
+
+                                return {
+                                    ...stock,
+                                    current_price: latest,
+                                    price_change_24h: change24h,
+                                };
+                            }
+
+                            return stock;
+                        } catch (err) {
+                            console.warn(`Failed to fetch chart for ${stock.id}`);
+                            return stock;
+                        }
+                    })
+                );
+
                 setStocks(updated);
-            } catch {
+            } catch (err) {
                 console.warn("Falling back to mock stock data.");
-                setStocks([
-                    { symbol: "AAPL", name: "Apple Inc.", price: 190, change: +0.45 },
-                    { symbol: "GOOGL", name: "Alphabet Inc.", price: 134, change: -0.65 },
-                    { symbol: "TSLA", name: "Tesla Inc.", price: 245, change: +1.2 },
-                    { symbol: "AAPL", name: "Apple Inc.", price: 190, change: +0.45 },
-                    { symbol: "GOOGL", name: "Alphabet Inc.", price: 134, change: -0.65 },
-                    { symbol: "TSLA", name: "Tesla Inc.", price: 245, change: +1.2 },
-                ]);
             }
         };
 
         fetch();
-        const interval = setInterval(fetch, 5000);
+        const interval = setInterval(fetch, 10000);
         return () => clearInterval(interval);
     }, []);
 
     return (
-        <div className="bg-black overflow-hidden whitespace-nowrap py-2">
+        <div className="bg-black overflow-hidden whitespace-nowrap py-2 rounded-lg shadow-lg">
             <div className="animate-marquee inline-block">
                 {stocks.map((stock, idx) => (
                     <span key={idx} className="text-white mx-6 inline-flex items-center">
-                        <span className="font-semibold mr-1">{stock.symbol}</span>
-                        <span>${stock.price.toFixed(2)}</span>
+                        <span className="font-semibold mr-1">{stock.symbol.toUpperCase()}</span>
+                        <span>${stock.current_price.toFixed(2)}</span>
                         <span
-                            className={`ml-2 ${stock.change ?? 0 > 0 ? "text-green-400" : "text-red-400"
-                                }`}
+                            className={`ml-2 ${stock.price_change_24h > 0 ? "text-green-400" : "text-red-400"}`}
                         >
-                            ({(stock.change ?? 0) > 0 ? "+" : ""}
-                            {stock.change ?? 0})
+                            ({stock.price_change_24h > 0 ? "+" : ""}
+                            {stock.price_change_24h.toFixed(2)})
                         </span>
                     </span>
                 ))}
-                {/* Duplicate for seamless loop */}
                 {stocks.map((stock, idx) => (
                     <span key={`dup-${idx}`} className="text-white mx-6 inline-flex items-center">
-                        <span className="font-semibold mr-1">{stock.symbol}</span>
-                        <span>${stock.price.toFixed(2)}</span>
+                        <span className="font-semibold mr-1">{stock.symbol.toUpperCase()}</span>
+                        <span>${stock.current_price.toFixed(2)}</span>
                         <span
-                            className={`ml-2 ${stock.change ?? 0 > 0 ? "text-green-400" : "text-red-400"
-                                }`}
+                            className={`ml-2 ${stock.price_change_24h > 0 ? "text-green-400" : "text-red-400"}`}
                         >
-                            ({stock.change ?? 0 > 0 ? "+" : ""}
-                            {stock.change})
+                            ({stock.price_change_24h > 0 ? "+" : ""}
+                            {stock.price_change_24h.toFixed(2)})
                         </span>
                     </span>
                 ))}

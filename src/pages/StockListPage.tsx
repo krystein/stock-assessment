@@ -4,37 +4,34 @@ import { IStock } from "../interfaces";
 import StockDetailModal from "../components/stockDetailModal";
 import { useNavigate } from "react-router-dom";
 
-const mockStocks: IStock[] = [
-  { symbol: "AAPL", name: "Apple Inc.", price: 189.25 },
-  { symbol: "MSFT", name: "Microsoft Corp", price: 345.12 },
-  { symbol: "GOOGL", name: "Alphabet Inc.", price: 2850.42 },
-  { symbol: "TSLA", name: "Tesla Inc.", price: 250.75 },
-];
 
 const StockListPage = () => {
   const [stocks, setStocks] = useState<IStock[]>([]);
   const [selectedStock, setSelectedStock] = useState<IStock | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchStocks = async () => {
       try {
         const data = await getStocks();
+
         if (data && data.length > 0) {
-          setStocks(data);
+          const unique = Array.from(
+            new Map(data.map((item) => [item.id, item])).values()
+          );
+          setStocks(unique);
         } else {
           console.warn("Empty data received. Using mock data.");
-          setStocks(mockStocks);
         }
       } catch (error) {
         console.error("API failed. Using mock data:", error);
-        setStocks(mockStocks);
       }
     };
 
     fetchStocks();
   }, []);
+  
 
   const handleOpenModal = (stock: IStock) => {
     setSelectedStock(stock);
@@ -45,7 +42,7 @@ const StockListPage = () => {
   };
 
   const filteredStocks = stocks.filter((stock) =>
-    `${stock.symbol} ${stock.name}`.toLowerCase().includes(searchTerm.toLowerCase())
+    stock.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -75,6 +72,7 @@ const StockListPage = () => {
           <thead className="bg-gray-100 text-gray-700 uppercase tracking-wider text-xs">
             <tr>
               <th className="px-5 py-3 text-left">Symbol</th>
+              <th className="px-5 py-3 text-left">Name</th>
               <th className="px-5 py-3 text-left">Company</th>
               <th className="px-5 py-3 text-left">Price</th>
               <th className="px-5 py-3 text-center">Action</th>
@@ -90,12 +88,13 @@ const StockListPage = () => {
             ) : (
               filteredStocks.map((stock) => (
                 <tr
-                  key={stock.symbol}
+                  key={stock.id}
                   className="border-t hover:bg-gray-50 transition-all"
                 >
+                  <td className="px-5 py-3 font-medium"><img src={stock.image} alt={stock.name} className="w-8 h-8" /></td>
                   <td className="px-5 py-3 font-medium">{stock.symbol}</td>
                   <td className="px-5 py-3">{stock.name}</td>
-                  <td className="px-5 py-3">${stock.price.toFixed(2)}</td>
+                  <td className="px-5 py-3">${stock.current_price.toFixed(2)}</td>
                   <td className="px-5 py-3 text-center">
                     <button
                       className="bg-blue-600 hover:bg-blue-700 transition text-white py-1.5 px-4 rounded text-sm"

@@ -8,7 +8,7 @@
     white-space: nowrap;
     overflow: hidden;
     box-sizing: border-box;
-    animation: marquee 10s linear infinite;
+    animation: marquee 1000s linear infinite;
   }
   
   @keyframes marquee {
