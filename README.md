@@ -11,13 +11,14 @@ Technical Implementation Plan
    - `config/`: Stores configuration files like `env.ts` for environment variables.
    - `interfaces/`: Defines TypeScript types and interfaces for data consistency.
    - `pages/`: Contains main pages such as the landing page, stock list, and stock detail pages.
-5. Use an external API to fetch real-time stock values and symbols.
+5. Use an external API to fetch real-time stock values and symbols. coingecko was used.
 6. Ensure global styles are loaded by importing `index.css` in `main.tsx`.
 
 
 Challenges
 
 1. Finding a reliable and free external API for real-time stock data.
+2. Limitation of number of request and use of websocket is limited to paid
 
 Insights and Approach
 
