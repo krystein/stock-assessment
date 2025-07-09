@@ -1,1 +1,2 @@
-export const FINNHUB_API_KEY = "d1mph39r01qlvnp3u4b0d1mph39r01qlvnp3u4bg";
+export const API_URL =
+  "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false";
