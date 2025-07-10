@@ -15,22 +15,21 @@ const StockListPage = () => {
     const fetchStocks = async () => {
       try {
         const data = await getStocks();
-
-        if (data && data.length > 0) {
-          const unique = Array.from(
-            new Map(data.map((item) => [item.id, item])).values()
-          );
-          setStocks(unique);
-        } else {
-          console.warn("Empty data received. Using mock data.");
-        }
+        const unique = Array.from(
+          new Map(data.map((item) => [item.id, item])).values()
+        );
+        setStocks(unique);
       } catch (error) {
         console.error("API failed. Using mock data:", error);
       }
     };
 
     fetchStocks();
+    const interval = setInterval(fetchStocks, 5000);
+
+    return () => clearInterval(interval);
   }, []);
+  
   
 
   const handleOpenModal = (stock: IStock) => {

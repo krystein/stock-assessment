@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { ChartPoint, ChartType, IStock, StockDetailModalProps } from "../interfaces";
+import {
+    ChartPoint,
+    ChartType,
+    IStock,
+    StockDetailModalProps,
+} from "../interfaces";
 import {
     LineChart,
     Line,
@@ -12,7 +17,6 @@ import {
 import { getMarketChart } from "../apiServices/stocks";
 import { formatNumberAbbrev } from "./formatter";
 
-
 const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose }) => {
     const [chartData, setChartData] = useState<ChartPoint[]>([]);
     const [livePrice, setLivePrice] = useState<number>(stock.current_price);
@@ -20,9 +24,10 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose }) =
     const [chartType, setChartType] = useState<ChartType>("price");
 
     useEffect(() => {
+        let intervalId: NodeJS.Timeout;
+
         const fetchChartData = async () => {
             try {
-                setLoading(true);
                 const { prices, market_caps, total_volumes } = await getMarketChart(stock.id);
 
                 const formatted = prices.map(([timestamp, price]: [number, number], index: number) => ({
@@ -45,7 +50,12 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose }) =
         };
 
         fetchChartData();
+        intervalId = setInterval(fetchChartData, 5000);
+
+        return () => clearInterval(intervalId);
     }, [stock.id]);
+
+    const latest = chartData[chartData.length - 1] || {};
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -76,8 +86,8 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose }) =
                             {stock.price_change_percentage_24h.toFixed(2)}%
                         </span>
                     </div>
-                    <div><span className="font-medium">Market Cap:</span> ${stock.market_cap.toLocaleString()}</div>
-                    <div><span className="font-medium">Volume:</span> ${stock.total_volume.toLocaleString()}</div>
+                    <div><span className="font-medium">Live Market Cap:</span> {formatNumberAbbrev(latest.marketCap || stock.market_cap)}</div>
+                    <div><span className="font-medium">Live Volume:</span> {formatNumberAbbrev(latest.volume || stock.total_volume)}</div>
                     <div><span className="font-medium">Rank:</span> #{stock.market_cap_rank}</div>
                     <div><span className="font-medium">Circulating Supply:</span> {stock.circulating_supply.toLocaleString()}</div>
                     <div><span className="font-medium">Total Supply:</span> {stock.total_supply?.toLocaleString() || "N/A"}</div>
@@ -108,6 +118,7 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose }) =
                         Market Cap
                     </button>
                 </div>
+
                 <div style={{ width: "100%", height: 250 }}>
                     {loading ? (
                         <p className="text-center text-sm text-gray-500">Loading chart...</p>
@@ -140,7 +151,6 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose }) =
                                 />
                             </LineChart>
                         </ResponsiveContainer>
-
                     )}
                 </div>
             </div>

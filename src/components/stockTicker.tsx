@@ -43,7 +43,7 @@ const StockTicker: React.FC = () => {
         };
 
         fetch();
-        const interval = setInterval(fetch, 10000);
+        const interval = setInterval(fetch, 5000);
         return () => clearInterval(interval);
     }, []);
 
