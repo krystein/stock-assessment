@@ -50,7 +50,7 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose }) =
         };
 
         fetchChartData();
-        intervalId = setInterval(fetchChartData, 5000);
+        intervalId = setInterval(fetchChartData, 60000);
 
         return () => clearInterval(intervalId);
     }, [stock.id]);

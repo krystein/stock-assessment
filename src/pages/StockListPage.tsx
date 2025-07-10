@@ -25,7 +25,7 @@ const StockListPage = () => {
     };
 
     fetchStocks();
-    const interval = setInterval(fetchStocks, 5000);
+    const interval = setInterval(fetchStocks, 60000);
 
     return () => clearInterval(interval);
   }, []);
